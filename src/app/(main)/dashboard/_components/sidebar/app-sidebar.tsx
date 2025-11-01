@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Settings, CircleHelp, Search, Database, ClipboardList, File, Command } from "lucide-react";
+import { Settings, CircleHelp, Search, Database, ClipboardList, File } from "lucide-react";
 
 import {
   Sidebar,
@@ -63,10 +63,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <Link href="/dashboard/default">
-                <Command />
-                <span className="text-base font-semibold">{APP_CONFIG.name}</span>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5 hover:bg-transparent hover:text-foreground"
+            >
+              <Link href="/dashboard/default" className="flex items-center gap-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground text-sm font-bold group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6">
+                  S
+                </div>
+                <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
