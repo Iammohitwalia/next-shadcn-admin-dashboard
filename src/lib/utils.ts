@@ -8,11 +8,16 @@ export function cn(...inputs: ClassValue[]) {
 export const getInitials = (str: string): string => {
   if (typeof str !== "string" || !str.trim()) return "?";
 
+  const words = str.trim().split(/\s+/).filter(Boolean);
+  
+  // If only one word, take first 2 letters
+  if (words.length === 1) {
+    return words[0].substring(0, 2).toUpperCase() || "?";
+  }
+  
+  // If multiple words, take first letter of each word
   return (
-    str
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
+    words
       .map((word) => word[0])
       .join("")
       .toUpperCase() || "?"

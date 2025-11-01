@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:safe": "set NODE_OPTIONS=--max-http-header-size=16384&& next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -22,6 +23,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.10.0",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.78.0",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-table": "^8.21.3",

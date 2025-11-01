@@ -1,88 +1,108 @@
+import * as React from "react";
 import { Table } from "@tanstack/react-table";
-import { ChevronRight, ChevronsRight, ChevronLeft, ChevronsLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
 }
 
 export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
+  const { pageIndex, pageSize } = table.getState().pagination;
+  
+  // Get total rows (filtered, before pagination)
+  const totalRows = table.getFilteredRowModel().rows.length;
+  
+  // Calculate page count
+  const pageCount = totalRows > 0 ? Math.ceil(totalRows / pageSize) : 1;
+  
+  // Ensure pageIndex is valid
+  const validPageIndex = Math.max(0, Math.min(pageIndex, Math.max(pageCount - 1, 0)));
+  
+  // Current page (1-based for display)
+  const currentPage = validPageIndex + 1;
+  
+  // Use table's built-in methods for button states - these are more reliable
+  const canPreviousPage = table.getCanPreviousPage();
+  const canNextPage = table.getCanNextPage();
+  
+  // Debug logging on every render
+  console.log('Pagination Render:', {
+    pageIndex,
+    validPageIndex,
+    currentPage,
+    pageCount,
+    totalRows,
+    pageSize,
+    canPreviousPage,
+    canNextPage,
+  });
+  
+  // Auto-correct page index if out of bounds
+  React.useEffect(() => {
+    if (totalRows === 0) {
+      if (pageIndex !== 0) {
+        table.setPageIndex(0);
+      }
+    } else if (pageIndex >= pageCount && pageCount > 0) {
+      table.setPageIndex(Math.max(pageCount - 1, 0));
+    }
+  }, [totalRows, pageCount, pageIndex, table]);
+
+  const handlePreviousPage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Previous clicked - Before:', { pageIndex, canPreviousPage, pageCount });
+    if (canPreviousPage) {
+      const newIndex = Math.max(0, pageIndex - 1);
+      console.log('Setting pageIndex to:', newIndex);
+      table.setPageIndex(newIndex);
+      console.log('After setPageIndex:', table.getState().pagination.pageIndex);
+    } else {
+      console.log('Cannot go to previous page');
+    }
+  };
+
+  const handleNextPage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Next clicked - Before:', { pageIndex, canNextPage, pageCount });
+    if (canNextPage) {
+      const newIndex = Math.min(pageCount - 1, pageIndex + 1);
+      console.log('Setting pageIndex to:', newIndex);
+      table.setPageIndex(newIndex);
+      console.log('After setPageIndex:', table.getState().pagination.pageIndex);
+    } else {
+      console.log('Cannot go to next page');
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between px-4">
-      <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-        {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
+    <div className="flex items-center justify-center gap-4 px-4 py-4">
+      <Button
+        variant="outline"
+        className="h-8 w-8 p-0"
+        onClick={handlePreviousPage}
+        disabled={!canPreviousPage}
+        type="button"
+      >
+        <span className="sr-only">Go to previous page</span>
+        <ChevronLeft className="size-4" />
+      </Button>
+      <div className="flex items-center justify-center text-sm font-medium">
+        Page {currentPage} of {pageCount}
       </div>
-      <div className="flex w-full items-center gap-8 lg:w-fit">
-        <div className="hidden items-center gap-2 lg:flex">
-          <Label htmlFor="rows-per-page" className="text-sm font-medium">
-            Rows per page
-          </Label>
-          <Select
-            value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-          >
-            <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex w-fit items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-        </div>
-        <div className="ml-auto flex items-center gap-2 lg:ml-0">
-          <Button
-            variant="outline"
-            className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span className="sr-only">Go to first page</span>
-            <ChevronsLeft />
-          </Button>
-          <Button
-            variant="outline"
-            className="size-8"
-            size="icon"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span className="sr-only">Go to previous page</span>
-            <ChevronLeft />
-          </Button>
-          <Button
-            variant="outline"
-            className="size-8"
-            size="icon"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <span className="sr-only">Go to next page</span>
-            <ChevronRight />
-          </Button>
-          <Button
-            variant="outline"
-            className="hidden size-8 lg:flex"
-            size="icon"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            <span className="sr-only">Go to last page</span>
-            <ChevronsRight />
-          </Button>
-        </div>
-      </div>
+      <Button
+        variant="outline"
+        className="h-8 w-8 p-0"
+        onClick={handleNextPage}
+        disabled={!canNextPage}
+        type="button"
+      >
+        <span className="sr-only">Go to next page</span>
+        <ChevronRight className="size-4" />
+      </Button>
     </div>
   );
 }

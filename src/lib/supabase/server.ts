@@ -1,15 +1,32 @@
-import { createClient } from "@supabase/supabase-js";
+// DEPRECATED: Server-side Supabase client is disabled to prevent 431 errors
+// All authentication is now handled client-side only via browser localStorage
+// This file is kept for backward compatibility but should not be used
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_URL");
+import { createServerClient } from "@supabase/ssr";
+
+/**
+ * @deprecated Do not use server-side Supabase client
+ * Use client-side supabaseClient from @/lib/supabase/client instead
+ * This prevents 431 errors from large server-side cookies
+ */
+export async function createSupabaseServerClient() {
+  // Return a no-op client that does nothing
+  // Authentication is handled entirely client-side
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          // Return empty - no server-side cookies
+          return [];
+        },
+        setAll() {
+          // Do nothing - prevent server-side cookie setting
+          // This prevents 431 errors
+        },
+      },
+    },
+  );
 }
-
-if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY");
-}
-
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-);
 

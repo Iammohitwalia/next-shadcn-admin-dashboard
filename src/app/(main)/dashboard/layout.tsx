@@ -5,9 +5,10 @@ import { cookies } from "next/headers";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
 import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
+
+import { AuthGuard } from "./_components/auth-guard";
 import {
   SIDEBAR_VARIANT_VALUES,
   SIDEBAR_COLLAPSIBLE_VALUES,
@@ -25,8 +26,19 @@ import { SearchDialog } from "./_components/sidebar/search-dialog";
 import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+  // Auth is handled client-side via AuthGuard to avoid cookie issues
+  // Only read sidebar_state cookie, skip all others to avoid 431 errors
+  let defaultOpen = false;
+  try {
+    const cookieStore = await cookies();
+    // Only read the sidebar cookie, don't access any other cookies
+    const sidebarCookie = cookieStore.get("sidebar_state");
+    defaultOpen = sidebarCookie?.value === "true";
+  } catch (error) {
+    // If cookie reading fails (e.g., 431 error), just use default
+    console.warn("Failed to read sidebar_state cookie:", error);
+    defaultOpen = false;
+  }
 
   const [sidebarVariant, sidebarCollapsible, contentLayout, navbarStyle] = await Promise.all([
     getPreference<SidebarVariant>("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
@@ -71,11 +83,13 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             <div className="flex items-center gap-2">
               <LayoutControls {...layoutPreferences} />
               <ThemeSwitcher />
-              <AccountSwitcher users={users} />
+              <AccountSwitcher />
             </div>
           </div>
         </header>
-        <div className="h-full p-4 md:p-6">{children}</div>
+        <div className="h-full p-4 md:p-6">
+          <AuthGuard>{children}</AuthGuard>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

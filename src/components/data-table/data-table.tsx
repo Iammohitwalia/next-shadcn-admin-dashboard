@@ -37,7 +37,10 @@ function renderTableBody<TData, TValue>({
   dndEnabled: boolean;
   dataIds: UniqueIdentifier[];
 }) {
-  if (!table.getRowModel().rows.length) {
+  // Get paginated rows (this is the final row model after filtering, sorting, and pagination)
+  const rows = table.getRowModel().rows;
+  
+  if (!rows.length) {
     return (
       <TableRow>
         <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -49,13 +52,13 @@ function renderTableBody<TData, TValue>({
   if (dndEnabled) {
     return (
       <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-        {table.getRowModel().rows.map((row) => (
+        {rows.map((row) => (
           <DraggableRow key={row.id} row={row} />
         ))}
       </SortableContext>
     );
   }
-  return table.getRowModel().rows.map((row) => (
+  return rows.map((row) => (
     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
       {row.getVisibleCells().map((cell) => (
         <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
@@ -70,7 +73,9 @@ export function DataTable<TData, TValue>({
   dndEnabled = false,
   onReorder,
 }: DataTableProps<TData, TValue>) {
-  const dataIds: UniqueIdentifier[] = table.getRowModel().rows.map((row) => Number(row.id) as UniqueIdentifier);
+  // Get paginated rows for drag and drop IDs
+  const rows = table.getRowModel().rows;
+  const dataIds: UniqueIdentifier[] = rows.map((row) => Number(row.id) as UniqueIdentifier);
   const sortableId = React.useId();
   const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
